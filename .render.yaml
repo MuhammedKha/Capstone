@@ -3,8 +3,8 @@ services:
     name: OABS
     env: docker
     plan: free
-    rootDir: OABS              # 👈 tells Render where your code is
-    dockerfilePath: OABS/Dockerfile  # 👈 tells Render where your Dockerfile is
+    rootDir: OABS             # Your app still lives in /OABS
+    dockerfilePath: ./Dockerfile  #  Dockerfile is now in root
     envVars:
       - key: DB_HOST
         value: your-mysql-host
