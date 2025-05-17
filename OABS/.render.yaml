@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: oabs-web
+    name: oabs-php
     env: docker
     plan: free
     dockerfilePath: ./Dockerfile
@@ -10,10 +10,10 @@ services:
       - key: DB_USER
         value: your-mysql-username
       - key: DB_PASS
-        value: your-db-password
+        value: your-mysql-password
       - key: DB_NAME
         value: oabs
       - key: SMTP_USER
-        value: your-smtp-user
+        value: your-smtp-username
       - key: SMTP_PASS
         value: your-smtp-password
