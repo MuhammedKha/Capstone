@@ -17,29 +17,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_result($id, $name, $hashedPassword, $role);
         $stmt->fetch();
 
-        // 🐛 DEBUG BLOCK (Remove after successful login)
-        echo "<pre>";
-        echo "Entered Password: [$password]" . PHP_EOL;
-        echo "Stored Hash: [$hashedPassword]" . PHP_EOL;
-        echo "Match: " . (password_verify($password, $hashedPassword) ? 'Yes' : 'No');
-        echo "</pre>";
-
-        // ✅ Actual password check
         if (password_verify($password, $hashedPassword)) {
+            // ✅ Login success
             $_SESSION['user_id'] = $id;
             $_SESSION['name'] = $name;
             $_SESSION['email'] = $email;
             $_SESSION['role'] = $role;
 
-            // Redirect by role
+            // Redirect to role-specific dashboard
             if ($role === 'client') {
                 header("Location: dashboard_client.php");
+                exit;
             } elseif ($role === 'provider') {
                 header("Location: ../providers/dashboard_provider.php");
+                exit;
             } elseif ($role === 'admin') {
                 header("Location: ../admin/dashboard_admin.php");
+                exit;
             }
-            exit;
         } else {
             $msg = "❌ Invalid password.";
         }
