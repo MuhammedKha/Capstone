@@ -6,7 +6,7 @@ $msg = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
-    $password = $_POST['password'];
+    $password = trim($_POST['password']);
 
     $stmt = $conn->prepare("SELECT id, name, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
@@ -17,14 +17,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_result($id, $name, $hashedPassword, $role);
         $stmt->fetch();
 
+        // 🐛 DEBUG BLOCK (Remove after successful login)
+        echo "<pre>";
+        echo "Entered Password: [$password]" . PHP_EOL;
+        echo "Stored Hash: [$hashedPassword]" . PHP_EOL;
+        echo "Match: " . (password_verify($password, $hashedPassword) ? 'Yes' : 'No');
+        echo "</pre>";
+
+        // ✅ Actual password check
         if (password_verify($password, $hashedPassword)) {
-            // ✅ Login success: create session
             $_SESSION['user_id'] = $id;
             $_SESSION['name'] = $name;
             $_SESSION['email'] = $email;
             $_SESSION['role'] = $role;
 
-            // Redirect based on role
+            // Redirect by role
             if ($role === 'client') {
                 header("Location: dashboard_client.php");
             } elseif ($role === 'provider') {
