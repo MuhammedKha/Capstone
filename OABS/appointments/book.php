@@ -2,7 +2,6 @@
 session_start();
 require_once '../includes/config.php';
 
-// 🔒 Only clients can book
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header("Location: ../users/login.php");
     exit;
@@ -11,27 +10,38 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 $client_id = $_SESSION['user_id'];
 $msg = "";
 
-// Handle form submission
+// Handle form
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $provider_id = $_POST['provider_id'];
-    $appointment_date = $_POST['appointment_date'];
-    $start_time = $_POST['start_time'];
-    $end_time = $_POST['end_time'];
+    $slot_id = $_POST['slot_id'];
 
-    // Insert into appointments
-    $stmt = $conn->prepare("INSERT INTO appointments (client_id, provider_id, appointment_date, start_time, end_time) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("iisss", $client_id, $provider_id, $appointment_date, $start_time, $end_time);
+    // Get slot info
+    $stmtSlot = $conn->prepare("SELECT * FROM availability WHERE id = ?");
+    $stmtSlot->bind_param("i", $slot_id);
+    $stmtSlot->execute();
+    $slot = $stmtSlot->get_result()->fetch_assoc();
 
-    if ($stmt->execute()) {
-        $msg = "✅ Appointment booked successfully.";
+    if ($slot) {
+        $provider_id = $slot['provider_id'];
+        $date = $slot['available_date'];
+        $start = $slot['start_time'];
+        $end = $slot['end_time'];
+
+        $stmt = $conn->prepare("INSERT INTO appointments (client_id, provider_id, appointment_date, start_time, end_time) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("iisss", $client_id, $provider_id, $date, $start, $end);
+
+        if ($stmt->execute()) {
+            $msg = "✅ Appointment booked successfully.";
+        } else {
+            $msg = "❌ Booking failed.";
+        }
     } else {
-        $msg = "❌ Booking failed. Please try again.";
+        $msg = "❌ Invalid slot selected.";
     }
 }
 
-// Get available slots
+// Fetch available slots
 $slots = $conn->query("
-    SELECT a.*, u.name AS provider_name
+    SELECT a.id, a.available_date, a.start_time, a.end_time, u.name AS provider_name
     FROM availability a
     JOIN users u ON u.id = a.provider_id
     ORDER BY a.available_date, a.start_time
@@ -48,24 +58,15 @@ $slots = $conn->query("
 <p style="color:green;"><?php echo $msg; ?></p>
 
 <form method="POST">
-    <label>Choose Slot:</label><br>
-    <select name="provider_id" required>
+    <label>Select Available Slot:</label><br>
+    <select name="slot_id" required>
         <option value="">-- Select --</option>
         <?php while ($row = $slots->fetch_assoc()) { ?>
-            <option value="<?= $row['provider_id'] ?>">
-                <?= $row['provider_name'] ?> - <?= $row['available_date'] ?> (<?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
+            <option value="<?= $row['id'] ?>">
+                <?= htmlspecialchars($row['provider_name']) ?> - <?= $row['available_date'] ?> (<?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
             </option>
         <?php } ?>
     </select><br><br>
-
-    <label>Appointment Date:</label><br>
-    <input type="date" name="appointment_date" required><br><br>
-
-    <label>Start Time:</label><br>
-    <input type="time" name="start_time" required><br><br>
-
-    <label>End Time:</label><br>
-    <input type="time" name="end_time" required><br><br>
 
     <button type="submit">Book Now</button>
 </form>
