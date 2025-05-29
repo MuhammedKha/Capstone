@@ -1,9 +1,26 @@
 <?php
 session_start();
-if ($_SESSION['role'] !== 'admin') {
+
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../users/login.php");
     exit;
 }
-echo "<h2>Welcome, Admin " . $_SESSION['name'] . "</h2>";
-echo "<p><a href='../users/logout.php'>Logout</a></p>";
+
+$name = $_SESSION['name'];
 ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - OABS</title>
+</head>
+<body>
+    <h2>Welcome, Admin <?= htmlspecialchars($name) ?></h2>
+
+    <ul>
+        <li><a href="../admin/view_appointments.php">View All Appointments</a></li>
+        <!-- Optional: Add future admin tools here -->
+        <li><a href="../users/logout.php">Logout</a></li>
+    </ul>
+</body>
+</html>
