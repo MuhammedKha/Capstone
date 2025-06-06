@@ -241,3 +241,31 @@ body {
     font-size: 0.95rem;
     color: #555;
 }
+/* Login Page Enhancements */
+.login-card {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.login-card h2 {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.login-card .form-label {
+    font-weight: 500;
+    color: #444;
+}
+
+.login-card .btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.login-card .btn-primary:hover {
+    background-color: #0056b3;
+}
