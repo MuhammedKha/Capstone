@@ -1,29 +1,35 @@
-<?php
-// about.php
-include 'templates/header.php';
-?>
+<?php include 'templates/header.php'; ?>
+<link rel="stylesheet" href="assets/style.css">
 
 <div class="container my-5">
-  <h2 class="text-center section-title">About Us</h2>
-  <p class="lead text-center">OABS is your go-to online appointment platform connecting clients with trusted professionals in just a few clicks.</p>
+  <h2 class="section-title text-center mb-5">About Us</h2>
 
-  <div class="row mt-5 text-center">
+  <div class="row mb-5">
     <div class="col-md-6 mb-4">
-      <div class="card shadow h-100">
-        <div class="card-body">
-          <h5 class="card-title">Our Mission</h5>
-          <p class="card-text">To simplify scheduling by providing a secure, user-friendly system that empowers providers and clients alike.</p>
-        </div>
-      </div>
+      <img src="assets/img/Team 1.jpg" class="img-fluid rounded shadow" alt="Team brainstorming">
     </div>
+    <div class="col-md-6 d-flex align-items-center">
+      <p class="lead">
+        OABS (Online Appointment Booking System) is a modern platform built for seamless, secure, and efficient appointment management. Our team is passionate about delivering intuitive user experiences and reliable service for both clients and service providers.
+      </p>
+    </div>
+  </div>
 
-    <div class="col-md-6 mb-4">
-      <div class="card shadow h-100">
-        <div class="card-body">
-          <h5 class="card-title">Why Choose OABS?</h5>
-          <p class="card-text">We focus on seamless usability, speed, and smart features that work for everyone.</p>
-        </div>
-      </div>
+  <div class="row text-center">
+    <div class="col-md-4 mb-4">
+      <img src="assets/img/Team 2.jpg" class="img-fluid rounded mb-3 shadow" alt="Team Working">
+      <h5 class="card-title">Our Mission</h5>
+      <p class="card-text">To make appointment booking as simple and accessible as possible for everyone.</p>
+    </div>
+    <div class="col-md-4 mb-4">
+      <img src="assets/img/Team 3.jpg" class="img-fluid rounded mb-3 shadow" alt="Team Collaboration">
+      <h5 class="card-title">Our Values</h5>
+      <p class="card-text">Transparency, efficiency, innovation, and customer satisfaction are at the heart of what we do.</p>
+    </div>
+    <div class="col-md-4 mb-4">
+      <img src="assets/img/Support 2.jpg" class="img-fluid rounded mb-3 shadow" alt="Team Unity">
+      <h5 class="card-title">Meet the Team</h5>
+      <p class="card-text">A small group of developers and designers dedicated to building impactful digital products.</p>
     </div>
   </div>
 </div>
