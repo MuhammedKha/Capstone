@@ -5,8 +5,8 @@
     <div class="p-5 bg-white rounded shadow hero-box">
         <h1 class="fw-bold mb-3">Welcome to <span class="text-primary">OABS</span></h1>
         <p class="lead mb-4">Effortlessly schedule and manage your appointments online.<br>Secure, fast, and user-friendly for clients and providers.</p>
-        <a href="login.php" class="btn btn-primary me-2">Login</a>
-        <a href="register.php" class="btn btn-outline-secondary">Register</a>
+        <a href="users/login.php" class="btn btn-primary me-2">Login</a>
+        <a href="users/register.php" class="btn btn-outline-secondary">Register</a>
     </div>
 </div>
 
