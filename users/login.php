@@ -24,7 +24,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION['email'] = $email;
                 $_SESSION['role'] = $role;
 
-                //  Safe redirection based on role
                 switch ($role) {
                     case 'client':
                         header("Location: dashboard_client.php");
@@ -61,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <title>Login – OABS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 
@@ -91,7 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
 
-                <p class="mt-3 text-center">Don't have an account? <a href="register.php">Register here</a></p>
+                <p class="mt-3 text-center">
+                    Don't have an account?
+                    <a href="register.php">Register here</a><br>
+                    <a href="../index.php" class="d-block mt-2">← Back to Home</a>
+                </p>
             </div>
         </div>
     </div>
