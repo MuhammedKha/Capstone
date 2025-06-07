@@ -22,30 +22,56 @@ $data = $result->get_result();
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Appointments - OABS</title>
+    <meta charset="UTF-8">
+    <title>My Appointments – OABS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-<h2>My Appointments</h2>
 
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Provider</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Status</th>
-    </tr>
-    <?php while ($row = $data->fetch_assoc()) { ?>
-        <tr>
-            <td><?= htmlspecialchars($row['provider_name']) ?></td>
-            <td><?= htmlspecialchars($row['appointment_date']) ?></td>
-            <td><?= htmlspecialchars($row['start_time']) ?> - <?= htmlspecialchars($row['end_time']) ?></td>
-            <td><?= htmlspecialchars($row['status']) ?></td>
-        </tr>
-    <?php } ?>
-</table>
+<?php include '../templates/header.php'; ?>
 
-<p><a href="dashboard_client.php">Back to Dashboard</a></p>
+<div class="container my-5">
+    <div class="card shadow p-4">
+        <h2 class="mb-4 text-center">My Appointments</h2>
+
+        <?php if ($data->num_rows > 0): ?>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Provider</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $data->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row['provider_name']) ?></td>
+                                <td><?= htmlspecialchars($row['appointment_date']) ?></td>
+                                <td><?= htmlspecialchars($row['start_time']) ?> – <?= htmlspecialchars($row['end_time']) ?></td>
+                                <td><?= htmlspecialchars(ucfirst($row['status'])) ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info text-center">You have no appointments.</div>
+        <?php endif; ?>
+
+        <div class="text-center mt-4">
+            <a href="dashboard_client.php" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<?php include '../templates/footer.php'; ?>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
