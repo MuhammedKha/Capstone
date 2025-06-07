@@ -54,7 +54,17 @@ $data = $result->get_result();
                                 <td><?= htmlspecialchars($row['provider_name']) ?></td>
                                 <td><?= htmlspecialchars($row['appointment_date']) ?></td>
                                 <td><?= htmlspecialchars($row['start_time']) ?> – <?= htmlspecialchars($row['end_time']) ?></td>
-                                <td><?= htmlspecialchars(ucfirst($row['status'])) ?></td>
+                                <td>
+                                    <?php
+                                        $status = $row['status'];
+                                        echo match ($status) {
+                                            'booked' => "<span class='badge bg-success'>Booked</span>",
+                                            'cancelled' => "<span class='badge bg-danger'>Cancelled</span>",
+                                            'completed' => "<span class='badge bg-secondary'>Completed</span>",
+                                            default => "<span class='badge bg-warning text-dark'>Unknown</span>",
+                                        };
+                                    ?>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -71,7 +81,6 @@ $data = $result->get_result();
 </div>
 
 <?php include '../templates/footer.php'; ?>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
