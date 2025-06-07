@@ -71,7 +71,7 @@ $appointments = $result->get_result();
         <button type="submit" class="btn btn-danger">Cancel Appointment</button>
     </form>
 
-    <p class="mt-3"><a href="dashboard_client.php">Back to Dashboard</a></p>
+    <p class="mt-3"><a href="../users/dashboard_client.php">Back to Dashboard</a></p>
 </div>
 
 <?php include '../templates/footer.php'; ?>

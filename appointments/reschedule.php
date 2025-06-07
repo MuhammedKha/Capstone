@@ -111,7 +111,7 @@ $slots = $conn->query("
         <button type="submit" class="btn btn-warning">Reschedule Appointment</button>
     </form>
 
-    <p class="mt-3"><a href="dashboard_client.php">Back to Dashboard</a></p>
+    <p class="mt-3"><a href="../users/dashboard_client.php">Back to Dashboard</a></p>
 </div>
 
 <?php include '../templates/footer.php'; ?>
