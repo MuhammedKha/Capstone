@@ -41,9 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
     }
 }
 
-// Fetch available slots with service name and description
+// Fetch all available slots with service info
 $slots = $conn->query("
-    SELECT a.id, a.available_date, a.start_time, a.end_time, a.service_name, a.service_description, u.name AS provider_name
+    SELECT 
+        a.id, a.available_date, a.start_time, a.end_time,
+        a.service_name, a.description, u.name AS provider_name
     FROM availability a
     JOIN users u ON u.id = a.provider_id
     WHERE a.status = 'available'
@@ -63,7 +65,7 @@ $slots = $conn->query("
 <?php include '../templates/header.php'; ?>
 
 <div class="container my-5">
-    <div class="card p-4 shadow mx-auto" style="max-width: 700px;">
+    <div class="card p-4 shadow mx-auto" style="max-width: 650px;">
         <h3 class="text-center mb-4">Book an Appointment</h3>
 
         <?= $msg ?>
@@ -74,12 +76,13 @@ $slots = $conn->query("
                 <option value="">-- Select --</option>
                 <?php while ($row = $slots->fetch_assoc()): ?>
                     <option value="<?= $row['id'] ?>">
-                        <?= htmlspecialchars($row['provider_name']) ?> – <?= htmlspecialchars($row['service_name']) ?>
-                        (<?= $row['available_date'] ?>, <?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
-                        – <?= htmlspecialchars(substr($row['service_description'], 0, 50)) ?>...
+                        <?= htmlspecialchars($row['provider_name']) ?> – <?= $row['available_date'] ?>
+                        (<?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
+                        – <?= htmlspecialchars($row['service_name']) ?>
                     </option>
                 <?php endwhile; ?>
             </select>
+
             <button type="submit" class="btn btn-primary w-100">Book Now</button>
         </form>
 
