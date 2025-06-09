@@ -130,6 +130,12 @@ while ($row = $result->fetch_assoc()) {
                 <div class="alert alert-info text-center">No cancelled appointments.</div>
             <?php endif; ?>
         </div>
+
+        <!-- Back to Dashboard Button -->
+        <div class="text-center mt-4">
+            <a href="dashboard_provider.php" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+
     </div>
 </div>
 
