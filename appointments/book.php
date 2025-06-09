@@ -43,12 +43,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
 
 // Fetch all available slots with service info
 $slots = $conn->query("
-    SELECT 
-        a.id, a.available_date, a.start_time, a.end_time,
-        a.service_name, a.description, u.name AS provider_name
+    SELECT a.id, a.available_date, a.start_time, a.end_time, u.name AS provider_name
     FROM availability a
     JOIN users u ON u.id = a.provider_id
-    WHERE a.status = 'available'
+    WHERE a.status = 'available' AND a.available_date >= CURDATE()
     ORDER BY a.available_date, a.start_time
 ");
 ?>

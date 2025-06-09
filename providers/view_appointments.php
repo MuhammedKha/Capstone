@@ -9,6 +9,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'provider') {
 
 $provider_id = $_SESSION['user_id'];
 $name = $_SESSION['name'];
+$msg = "";
+
+// Auto-update past appointments
+$conn->query("UPDATE appointments SET status = 'completed' 
+              WHERE provider_id = $provider_id 
+              AND appointment_date < CURDATE() 
+              AND status = 'booked'");
+
+// Manual completion from provider
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['complete_id'])) {
+    $complete_id = intval($_POST['complete_id']);
+    $stmt = $conn->prepare("UPDATE appointments SET status = 'completed' 
+                            WHERE id = ? AND provider_id = ? AND status = 'booked'");
+    $stmt->bind_param("ii", $complete_id, $provider_id);
+    if ($stmt->execute()) {
+        $msg = "<div class='alert alert-success'>✅ Appointment marked as completed.</div>";
+    } else {
+        $msg = "<div class='alert alert-danger'>❌ Failed to update appointment status.</div>";
+    }
+}
 
 // Fetch all appointments
 $stmt = $conn->prepare("
@@ -49,6 +69,8 @@ while ($row = $result->fetch_assoc()) {
     <div class="card shadow p-4">
         <h3 class="text-center mb-4">Appointments for <?= htmlspecialchars($name) ?></h3>
 
+        <?= $msg ?>
+
         <div class="mb-3 d-flex justify-content-center gap-2">
             <button class="btn btn-outline-primary filter-appointments" data-type="all">All</button>
             <button class="btn btn-outline-success filter-appointments" data-type="upcoming">Upcoming</button>
@@ -83,10 +105,21 @@ while ($row = $result->fetch_assoc()) {
                                 </td>
                                 <td>
                                     <?php if ($row['status'] === 'booked'): ?>
-                                        <form method="POST" action="cancel_appointment_provider.php" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                                            <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
-                                        </form>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <form method="POST" action="cancel_appointment_provider.php" onsubmit="return confirm('Cancel this appointment?');">
+                                                <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                            </form>
+                                            <?php
+                                                $today = date('Y-m-d');
+                                                if ($row['appointment_date'] <= $today):
+                                            ?>
+                                                <form method="POST" onsubmit="return confirm('Mark this appointment as completed?');">
+                                                    <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
+                                                    <button type="submit" class="btn btn-sm btn-secondary">Complete</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php else: ?>
                                         —
                                     <?php endif; ?>
@@ -131,11 +164,9 @@ while ($row = $result->fetch_assoc()) {
             <?php endif; ?>
         </div>
 
-        <!-- Back to Dashboard Button -->
         <div class="text-center mt-4">
             <a href="dashboard_provider.php" class="btn btn-secondary">← Back to Dashboard</a>
         </div>
-
     </div>
 </div>
 

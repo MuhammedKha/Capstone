@@ -9,6 +9,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 $client_id = $_SESSION['user_id'];
 
+// Auto-mark past booked appointments as completed
+$conn->query("UPDATE appointments 
+              SET status = 'completed' 
+              WHERE client_id = $client_id 
+              AND appointment_date < CURDATE() 
+              AND status = 'booked'");
+
+// Fetch appointments with service info
 $stmt = $conn->prepare("
     SELECT 
         a.*, 
