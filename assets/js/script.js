@@ -51,6 +51,55 @@ function populateTimeDropdowns() {
     }
 }
 
+/**
+ * Toggle visibility of the cancelled appointments section
+ */
+function toggleCancelledAppointments() {
+    const section = document.getElementById("cancelledAppointments");
+    if (section) {
+        section.classList.toggle("d-none");
+    }
+}
+
+/**
+ * Filter appointments table by type: past, upcoming, or all
+ */
+function filterAppointmentsByDate(filter) {
+    const today = new Date().toISOString().split("T")[0];
+    const rows = document.querySelectorAll(".appointment-row");
+
+    rows.forEach(row => {
+        const date = row.getAttribute("data-date");
+        if (!date) return;
+
+        if (filter === "upcoming" && date < today) {
+            row.style.display = "none";
+        } else if (filter === "past" && date >= today) {
+            row.style.display = "none";
+        } else {
+            row.style.display = "";
+        }
+    });
+}
+
 window.addEventListener("DOMContentLoaded", function () {
     populateTimeDropdowns();
+
+    const appointmentDropdown = document.getElementById("appointment_id");
+    if (appointmentDropdown) {
+        appointmentDropdown.addEventListener("change", updateSlotsByProvider);
+    }
+
+    const toggleBtn = document.getElementById("toggleCancelledBtn");
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", toggleCancelledAppointments);
+    }
+
+    const filters = document.querySelectorAll(".filter-appointments");
+    filters.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const type = btn.getAttribute("data-type");
+            filterAppointmentsByDate(type);
+        });
+    });
 });
