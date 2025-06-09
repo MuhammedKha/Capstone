@@ -14,7 +14,7 @@ $msg = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
     $slot_id = intval($_POST['slot_id']);
 
-    // Check if slot exists and is available
+    // Check if slot exists and is still available
     $stmt = $conn->prepare("SELECT * FROM availability WHERE id = ? AND status = 'available'");
     $stmt->bind_param("i", $slot_id);
     $stmt->execute();
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
         $stmtBook->bind_param("iisss", $client_id, $slot['provider_id'], $slot['available_date'], $slot['start_time'], $slot['end_time']);
 
         if ($stmtBook->execute()) {
-            // Mark slot as booked
+            // Mark availability as booked
             $stmtUpdate = $conn->prepare("UPDATE availability SET status = 'booked' WHERE id = ?");
             $stmtUpdate->bind_param("i", $slot_id);
             $stmtUpdate->execute();
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
     }
 }
 
-// Fetch all upcoming available slots
+// Fetch all upcoming available slots (only future time slots)
 $slots = $conn->query("
     SELECT a.id, a.available_date, a.start_time, a.end_time, a.service_name, a.description, u.name AS provider_name
     FROM availability a
@@ -52,7 +52,7 @@ $slots = $conn->query("
     WHERE a.status = 'available'
       AND (
         a.available_date > CURDATE()
-        OR (a.available_date = CURDATE() AND a.start_time > CURTIME())
+        OR (a.available_date = CURDATE() AND CAST(a.start_time AS TIME) > CURTIME())
       )
     ORDER BY a.available_date, a.start_time
 ");
@@ -89,6 +89,7 @@ $slots = $conn->query("
                     </option>
                 <?php endwhile; ?>
             </select>
+
             <button type="submit" class="btn btn-primary w-100">Book Now</button>
         </form>
 
