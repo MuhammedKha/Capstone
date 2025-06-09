@@ -23,3 +23,34 @@ function updateSlotsByProvider() {
     const slotSelect = document.getElementById("new_slot_id");
     if (slotSelect) slotSelect.value = "";
 }
+
+/**
+ * Populate time dropdowns in HH:MM format (15-minute intervals)
+ */
+function populateTimeDropdowns() {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            let hour = h.toString().padStart(2, '0');
+            let min = m.toString().padStart(2, '0');
+            times.push(`${hour}:${min}:00`);
+        }
+    }
+
+    const start = document.getElementById("start_time");
+    const end = document.getElementById("end_time");
+
+    if (start && end) {
+        start.innerHTML = '<option value="">-- Select Start Time --</option>';
+        end.innerHTML = '<option value="">-- Select End Time --</option>';
+
+        times.forEach(time => {
+            start.innerHTML += `<option value="${time}">${time}</option>`;
+            end.innerHTML += `<option value="${time}">${time}</option>`;
+        });
+    }
+}
+
+window.addEventListener("DOMContentLoaded", function () {
+    populateTimeDropdowns();
+});

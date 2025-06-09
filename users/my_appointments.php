@@ -9,16 +9,25 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 $client_id = $_SESSION['user_id'];
 
-$result = $conn->prepare("
-    SELECT a.*, u.name AS provider_name 
+$stmt = $conn->prepare("
+    SELECT 
+        a.*, 
+        u.name AS provider_name,
+        av.service_name, 
+        av.description
     FROM appointments a
     JOIN users u ON a.provider_id = u.id
+    LEFT JOIN availability av 
+        ON av.provider_id = a.provider_id 
+        AND av.available_date = a.appointment_date 
+        AND av.start_time = a.start_time 
+        AND av.end_time = a.end_time
     WHERE a.client_id = ?
     ORDER BY a.appointment_date DESC, a.start_time DESC
 ");
-$result->bind_param("i", $client_id);
-$result->execute();
-$data = $result->get_result();
+$stmt->bind_param("i", $client_id);
+$stmt->execute();
+$data = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -45,6 +54,7 @@ $data = $result->get_result();
                             <th>Provider</th>
                             <th>Date</th>
                             <th>Time</th>
+                            <th>Service</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -54,6 +64,10 @@ $data = $result->get_result();
                                 <td><?= htmlspecialchars($row['provider_name']) ?></td>
                                 <td><?= htmlspecialchars($row['appointment_date']) ?></td>
                                 <td><?= htmlspecialchars($row['start_time']) ?> – <?= htmlspecialchars($row['end_time']) ?></td>
+                                <td>
+                                    <strong><?= htmlspecialchars($row['service_name'] ?? '—') ?></strong><br>
+                                    <small class="text-muted"><?= htmlspecialchars($row['description'] ?? '') ?></small>
+                                </td>
                                 <td>
                                     <?php
                                         $status = $row['status'];
@@ -82,5 +96,6 @@ $data = $result->get_result();
 
 <?php include '../templates/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/script.js"></script>
 </body>
 </html>
