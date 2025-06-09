@@ -136,9 +136,6 @@ $slots = $conn->query("
 
 <?php include '../templates/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
-<script>
-    document.getElementById("appointment_id")?.addEventListener("change", updateSlotsByProvider);
-</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
