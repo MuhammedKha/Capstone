@@ -80,10 +80,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
                     <p>Regards,<br>OABS System</p>
                 ";
 
-                $adminEmail = 'capstoneproject0044@gmail.com'; // Change if needed
+                $adminEmail = 'azz37447@my.holmes.edu.au'; 
                 sendMail($emails['client_email'], $subject, $body);
                 sendMail($emails['provider_email'], $subject, $providerBody);
-                sendMail($adminEmail, "Admin Alert – $subject", $providerBody); // Optional
+                sendMail($adminEmail, "Admin Alert – $subject", $providerBody); 
 
                 $msg = "<div class='alert alert-success'>✅ Appointment booked successfully. Confirmation emails sent.</div>";
             } else {
