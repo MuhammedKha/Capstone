@@ -1,10 +1,8 @@
 <?php
-// Set timezone to Melbourne
 date_default_timezone_set('Australia/Melbourne');
-
-// Start session and config
 session_start();
 require_once '../includes/config.php';
+require_once '../includes/mail_helper.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header("Location: ../users/login.php");
@@ -14,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 $client_id = $_SESSION['user_id'];
 $msg = "";
 
-// Handle reschedule submission
+// Rescheduling logic
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_POST['new_slot_id'])) {
     $appointment_id = intval($_POST['appointment_id']);
     $new_slot_id = intval($_POST['new_slot_id']);
@@ -24,7 +22,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
     $stmtAppt->execute();
     $appt = $stmtAppt->get_result()->fetch_assoc();
 
-    $stmtSlot = $conn->prepare("SELECT * FROM availability WHERE id = ? AND status = 'available'");
+    $stmtSlot = $conn->prepare("
+        SELECT a.*, u.email AS provider_email, u.name AS provider_name 
+        FROM availability a 
+        JOIN users u ON a.provider_id = u.id 
+        WHERE a.id = ? AND a.status = 'available'
+    ");
     $stmtSlot->bind_param("i", $new_slot_id);
     $stmtSlot->execute();
     $slot = $stmtSlot->get_result()->fetch_assoc();
@@ -33,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
         if ($appt['provider_id'] === $slot['provider_id']) {
             $stmtUpdate = $conn->prepare("
                 UPDATE appointments 
-                SET appointment_date = ?, start_time = ?, end_time = ?
+                SET appointment_date = ?, start_time = ?, end_time = ? 
                 WHERE id = ? AND client_id = ?
             ");
             $stmtUpdate->bind_param("sssii", $slot['available_date'], $slot['start_time'], $slot['end_time'], $appointment_id, $client_id);
@@ -50,7 +53,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
                 $stmtBookNew->bind_param("i", $new_slot_id);
                 $stmtBookNew->execute();
 
-                $msg = "<div class='alert alert-success'>✅ Appointment rescheduled successfully.</div>";
+                $stmtClient = $conn->prepare("SELECT name, email FROM users WHERE id = ?");
+                $stmtClient->bind_param("i", $client_id);
+                $stmtClient->execute();
+                $client = $stmtClient->get_result()->fetch_assoc();
+
+                $subject = "Appointment Rescheduled – OABS";
+                $bodyClient = "
+                    <p>Dear {$client['name']},</p>
+                    <p>Your appointment with {$slot['provider_name']} has been <strong>rescheduled</strong> to:</p>
+                    <ul>
+                        <li><strong>Date:</strong> {$slot['available_date']}</li>
+                        <li><strong>Time:</strong> {$slot['start_time']} to {$slot['end_time']}</li>
+                    </ul>
+                    <p>Thank you for using OABS.</p>
+                ";
+
+                sendMail($client['email'], $subject, $bodyClient);
+
+                sendMail($slot['provider_email'], "Client Rescheduled Appointment – OABS", "
+                    <p>Your client {$client['name']} has rescheduled their appointment to:</p>
+                    <ul>
+                        <li><strong>Date:</strong> {$slot['available_date']}</li>
+                        <li><strong>Time:</strong> {$slot['start_time']} to {$slot['end_time']}</li>
+                    </ul>
+                ");
+
+                // ADMIN email alert
+                sendMail("azz37447@my.holmes.edu.au", "Appointment Rescheduled (Admin Notification)", "
+                    <p><strong>Reschedule Alert</strong></p>
+                    <ul>
+                        <li><strong>Client:</strong> {$client['name']} ({$client['email']})</li>
+                        <li><strong>Provider:</strong> {$slot['provider_name']}</li>
+                        <li><strong>New Date:</strong> {$slot['available_date']}</li>
+                        <li><strong>Time:</strong> {$slot['start_time']} to {$slot['end_time']}</li>
+                    </ul>
+                ");
+
+                $msg = "<div class='alert alert-success'>✅ Appointment rescheduled and email notifications sent.</div>";
             } else {
                 $msg = "<div class='alert alert-danger'>❌ Failed to reschedule appointment.</div>";
             }
@@ -62,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
     }
 }
 
-// Fetch client appointments
+// Fetch upcoming appointments
 $stmtAppointments = $conn->prepare("
     SELECT a.id, a.appointment_date, a.start_time, a.end_time, a.provider_id, u.name AS provider_name
     FROM appointments a
@@ -74,7 +114,7 @@ $stmtAppointments->bind_param("i", $client_id);
 $stmtAppointments->execute();
 $appointments = $stmtAppointments->get_result();
 
-// Fetch all future available slots
+// Fetch available future slots
 $all_slots_raw = $conn->query("
     SELECT a.id, a.available_date, a.start_time, a.end_time, a.provider_id, u.name AS provider_name
     FROM availability a
