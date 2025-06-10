@@ -5,6 +5,7 @@ date_default_timezone_set('Australia/Melbourne');
 // Start session and include config
 session_start();
 require_once '../includes/config.php';
+require_once '../includes/mail_helper.php'; // 📧 Add this to enable email
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'provider') {
     header("Location: ../users/login.php");
@@ -12,25 +13,34 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'provider') {
 }
 
 $provider_id = $_SESSION['user_id'];
+$provider_name = $_SESSION['name'];
 $msg = "";
 
 // Handle cancellation
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'])) {
     $appointment_id = intval($_POST['appointment_id']);
 
-    // Get the appointment
-    $stmt = $conn->prepare("SELECT * FROM appointments WHERE id = ? AND provider_id = ?");
+    // Fetch full appointment details
+    $stmt = $conn->prepare("
+        SELECT a.*, 
+               c.name AS client_name, c.email AS client_email, 
+               p.name AS provider_name, p.email AS provider_email
+        FROM appointments a
+        JOIN users c ON a.client_id = c.id
+        JOIN users p ON a.provider_id = p.id
+        WHERE a.id = ? AND a.provider_id = ?
+    ");
     $stmt->bind_param("ii", $appointment_id, $provider_id);
     $stmt->execute();
     $appointment = $stmt->get_result()->fetch_assoc();
 
     if ($appointment && $appointment['status'] === 'booked') {
-        // Update appointment status
+        // Cancel appointment
         $stmtCancel = $conn->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = ?");
         $stmtCancel->bind_param("i", $appointment_id);
         $stmtCancel->execute();
 
-        // Update availability status back to available
+        // Free up the slot in availability
         $stmtFree = $conn->prepare("
             UPDATE availability 
             SET status = 'available' 
@@ -39,13 +49,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'])) {
         $stmtFree->bind_param("isss", $provider_id, $appointment['appointment_date'], $appointment['start_time'], $appointment['end_time']);
         $stmtFree->execute();
 
-        $msg = "<div class='alert alert-success'>✅ Appointment cancelled successfully.</div>";
+        // ✉️ Prepare email content
+        $date = $appointment['appointment_date'];
+        $time = $appointment['start_time'] . ' – ' . $appointment['end_time'];
+        $clientEmail = $appointment['client_email'];
+        $providerEmail = $appointment['provider_email'];
+        $adminEmail = 'azz37447@my.holmes.edu.au';
+
+        $subject = "Appointment Cancelled – OABS";
+        $body = "
+            <p>Dear {$appointment['client_name']},</p>
+            <p>Your appointment scheduled with {$appointment['provider_name']} on <strong>$date</strong> at <strong>$time</strong> has been <span style='color:red;'>cancelled</span> by the provider.</p>
+            <p>Please log in to book a new appointment if needed.</p>
+            <p>Regards,<br>OABS Team</p>
+        ";
+
+        // Send emails to client, provider, admin
+        sendMail($clientEmail, $subject, $body);
+        sendMail($providerEmail, $subject, "<p>You cancelled an appointment with {$appointment['client_name']} on $date at $time.</p>");
+        sendMail($adminEmail, $subject, "<p>Provider <strong>{$appointment['provider_name']}</strong> cancelled an appointment with <strong>{$appointment['client_name']}</strong> on <strong>$date</strong> at <strong>$time</strong>.</p>");
+
+        $msg = "<div class='alert alert-success'>✅ Appointment cancelled and notifications sent.</div>";
     } else {
         $msg = "<div class='alert alert-warning'>⚠️ Appointment not found or already cancelled.</div>";
     }
 }
 
-// Fetch booked appointments
+// Fetch remaining booked appointments
 $stmt = $conn->prepare("
     SELECT a.id, a.appointment_date, a.start_time, a.end_time, u.name AS client_name
     FROM appointments a
