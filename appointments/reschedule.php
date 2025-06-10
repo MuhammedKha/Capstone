@@ -2,7 +2,7 @@
 // Set timezone to Melbourne
 date_default_timezone_set('Australia/Melbourne');
 
-// Start session and include config
+// Start session and config
 session_start();
 require_once '../includes/config.php';
 
@@ -19,13 +19,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
     $appointment_id = intval($_POST['appointment_id']);
     $new_slot_id = intval($_POST['new_slot_id']);
 
-    // Get original appointment
     $stmtAppt = $conn->prepare("SELECT * FROM appointments WHERE id = ? AND client_id = ?");
     $stmtAppt->bind_param("ii", $appointment_id, $client_id);
     $stmtAppt->execute();
     $appt = $stmtAppt->get_result()->fetch_assoc();
 
-    // Get new slot
     $stmtSlot = $conn->prepare("SELECT * FROM availability WHERE id = ? AND status = 'available'");
     $stmtSlot->bind_param("i", $new_slot_id);
     $stmtSlot->execute();
@@ -39,6 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['appointment_id'], $_P
                 WHERE id = ? AND client_id = ?
             ");
             $stmtUpdate->bind_param("sssii", $slot['available_date'], $slot['start_time'], $slot['end_time'], $appointment_id, $client_id);
+
             if ($stmtUpdate->execute()) {
                 $stmtFreeOld = $conn->prepare("
                     UPDATE availability SET status = 'available' 
@@ -75,14 +74,23 @@ $stmtAppointments->bind_param("i", $client_id);
 $stmtAppointments->execute();
 $appointments = $stmtAppointments->get_result();
 
-// Fetch all available slots
-$slots = $conn->query("
+// Fetch all future available slots
+$all_slots_raw = $conn->query("
     SELECT a.id, a.available_date, a.start_time, a.end_time, a.provider_id, u.name AS provider_name
     FROM availability a
     JOIN users u ON u.id = a.provider_id
     WHERE a.status = 'available'
     ORDER BY a.available_date, a.start_time
 ");
+
+$slots = [];
+$now = new DateTime();
+while ($row = $all_slots_raw->fetch_assoc()) {
+    $slotDT = new DateTime($row['available_date'] . ' ' . $row['start_time']);
+    if ($slotDT > $now) {
+        $slots[] = $row;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -99,9 +107,7 @@ $slots = $conn->query("
 <div class="container my-5">
     <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
         <h3 class="text-center mb-4">Reschedule Appointment</h3>
-
         <?= $msg ?>
-
         <form method="POST">
             <div class="mb-3">
                 <label for="appointment_id" class="form-label">Select Your Current Appointment:</label>
@@ -109,8 +115,7 @@ $slots = $conn->query("
                     <option value="">-- Select Appointment --</option>
                     <?php while ($row = $appointments->fetch_assoc()): ?>
                         <option value="<?= $row['id'] ?>" data-provider="<?= $row['provider_id'] ?>">
-                            <?= htmlspecialchars($row['provider_name']) ?> – <?= $row['appointment_date'] ?>
-                            (<?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
+                            <?= htmlspecialchars($row['provider_name']) ?> – <?= $row['appointment_date'] ?> (<?= $row['start_time'] ?> to <?= $row['end_time'] ?>)
                         </option>
                     <?php endwhile; ?>
                 </select>
@@ -120,12 +125,11 @@ $slots = $conn->query("
                 <label for="new_slot_id" class="form-label">Select New Slot:</label>
                 <select name="new_slot_id" id="new_slot_id" class="form-select" required>
                     <option value="">-- Select Slot --</option>
-                    <?php while ($slot = $slots->fetch_assoc()): ?>
+                    <?php foreach ($slots as $slot): ?>
                         <option value="<?= $slot['id'] ?>" data-provider="<?= $slot['provider_id'] ?>">
-                            <?= htmlspecialchars($slot['provider_name']) ?> – <?= $slot['available_date'] ?>
-                            (<?= $slot['start_time'] ?> to <?= $slot['end_time'] ?>)
+                            <?= htmlspecialchars($slot['provider_name']) ?> – <?= $slot['available_date'] ?> (<?= $slot['start_time'] ?> to <?= $slot['end_time'] ?>)
                         </option>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </select>
             </div>
 

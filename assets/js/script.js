@@ -16,7 +16,6 @@ function updateSlotsByProvider() {
         const optProvider = opt.getAttribute("data-provider");
         const slotText = opt.textContent;
 
-        // Extract date and start time from option text
         const dateMatch = slotText.match(/(\d{4}-\d{2}-\d{2})/);
         const timeMatch = slotText.match(/\((\d{2}:\d{2}:\d{2}) to/);
 
@@ -35,7 +34,6 @@ function updateSlotsByProvider() {
         }
     });
 
-    // Reset slot selection
     const slotSelect = document.getElementById("new_slot_id");
     if (slotSelect) slotSelect.value = "";
 }
@@ -104,6 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
     const appointmentDropdown = document.getElementById("appointment_id");
     if (appointmentDropdown) {
         appointmentDropdown.addEventListener("change", updateSlotsByProvider);
+        updateSlotsByProvider(); // ✅ Ensure filter runs immediately
     }
 
     const toggleBtn = document.getElementById("toggleCancelledBtn");
