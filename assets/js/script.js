@@ -76,24 +76,49 @@ function toggleCancelledAppointments() {
 }
 
 /**
- * Filter appointments table by type: past, upcoming, cancelled, or all
+ * Filter appointments by type: upcoming, past, cancelled, all
  */
-function filterAppointmentsTable(filterType, tableId = "appointmentsTable") {
-    const today = new Date().toISOString().split("T")[0];
-    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+function setupAdminFilters() {
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    const searchInput = document.getElementById("appointmentSearch");
+    const rows = document.querySelectorAll("#appointmentsTable tbody tr");
 
-    rows.forEach(row => {
-        const date = row.getAttribute("data-date");
-        const status = row.getAttribute("data-status");
+    filterButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const filter = btn.getAttribute("data-type");
+            const today = new Date().toISOString().split("T")[0];
 
-        let show = true;
-        if (filterType === "upcoming") show = status === "booked" && date >= today;
-        else if (filterType === "past") show = status === "booked" && date < today;
-        else if (filterType === "cancelled") show = status === "cancelled";
-        else show = true; // all
+            rows.forEach(row => {
+                const date = row.getAttribute("data-date");
+                const status = row.getAttribute("data-status");
+                let show = true;
 
-        row.style.display = show ? "" : "none";
+                if (filter === "upcoming") {
+                    show = status === "booked" && date >= today;
+                } else if (filter === "past") {
+                    show = status === "booked" && date < today;
+                } else if (filter === "cancelled") {
+                    show = status === "cancelled";
+                }
+
+                row.style.display = show ? "" : "none";
+            });
+        });
     });
+
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.toLowerCase().trim();
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    }
 }
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -102,7 +127,7 @@ window.addEventListener("DOMContentLoaded", function () {
     const appointmentDropdown = document.getElementById("appointment_id");
     if (appointmentDropdown) {
         appointmentDropdown.addEventListener("change", updateSlotsByProvider);
-        updateSlotsByProvider(); // Run on load
+        updateSlotsByProvider(); // ✅ filter immediately
     }
 
     const toggleBtn = document.getElementById("toggleCancelledBtn");
@@ -114,8 +139,9 @@ window.addEventListener("DOMContentLoaded", function () {
     filters.forEach(btn => {
         btn.addEventListener("click", () => {
             const type = btn.getAttribute("data-type");
-            const targetTable = btn.getAttribute("data-table") || "appointmentsTable";
-            filterAppointmentsTable(type, targetTable);
+            filterAppointmentsByDate(type);
         });
     });
+
+    setupAdminFilters(); // ✅ Setup filters & search for admin view
 });
