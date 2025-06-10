@@ -1,13 +1,10 @@
 // script.js — Shared JavaScript for OABS
 
-/**
- * Filters available slots in reschedule form to only show those
- * from the same provider as the selected appointment, and only future slots.
- */
+// Filter available slots in reschedule form to only show future ones from same provider
 function updateSlotsByProvider() {
     const apptDropdown = document.getElementById("appointment_id");
-    const selectedOption = apptDropdown.options[apptDropdown.selectedIndex];
-    const providerId = selectedOption ? selectedOption.getAttribute("data-provider") : null;
+    const selectedOption = apptDropdown?.options[apptDropdown.selectedIndex];
+    const providerId = selectedOption?.getAttribute("data-provider");
 
     const slotOptions = document.querySelectorAll("#new_slot_id option");
     const now = new Date();
@@ -27,20 +24,14 @@ function updateSlotsByProvider() {
 
         const isExpired = slotDateTime && slotDateTime < now;
 
-        if (providerId && optProvider === providerId && !isExpired) {
-            opt.style.display = "block";
-        } else {
-            opt.style.display = "none";
-        }
+        opt.style.display = (providerId && optProvider === providerId && !isExpired) ? "block" : "none";
     });
 
     const slotSelect = document.getElementById("new_slot_id");
     if (slotSelect) slotSelect.value = "";
 }
 
-/**
- * Populate time dropdowns in HH:MM format (15-minute intervals)
- */
+// Populate dropdowns with time values (15-minute intervals)
 function populateTimeDropdowns() {
     const times = [];
     for (let h = 0; h < 24; h++) {
@@ -65,9 +56,7 @@ function populateTimeDropdowns() {
     }
 }
 
-/**
- * Toggle visibility of the cancelled appointments section
- */
+// Toggle visibility of cancelled section (used in some views)
 function toggleCancelledAppointments() {
     const section = document.getElementById("cancelledAppointments");
     if (section) {
@@ -75,12 +64,10 @@ function toggleCancelledAppointments() {
     }
 }
 
-/**
- * Filter appointments by type: upcoming, past, cancelled, all
- */
+// Setup admin filters and search bar
 function setupAdminFilters() {
     const filterButtons = document.querySelectorAll(".filter-btn");
-    const searchInput = document.getElementById("appointmentSearch");
+    const searchInput = document.getElementById("searchInput");
     const rows = document.querySelectorAll("#appointmentsTable tbody tr");
 
     filterButtons.forEach(btn => {
@@ -100,7 +87,7 @@ function setupAdminFilters() {
                 } else if (filter === "cancelled") {
                     show = status === "cancelled";
                 } else {
-                    show = true; // all
+                    show = true;
                 }
 
                 row.style.display = show ? "" : "none";
@@ -113,23 +100,20 @@ function setupAdminFilters() {
             const query = searchInput.value.toLowerCase().trim();
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                if (text.includes(query)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+                row.style.display = text.includes(query) ? "" : "none";
             });
         });
     }
 }
 
+// On page load
 window.addEventListener("DOMContentLoaded", function () {
     populateTimeDropdowns();
 
     const appointmentDropdown = document.getElementById("appointment_id");
     if (appointmentDropdown) {
         appointmentDropdown.addEventListener("change", updateSlotsByProvider);
-        updateSlotsByProvider(); // ✅ filter immediately
+        updateSlotsByProvider();
     }
 
     const toggleBtn = document.getElementById("toggleCancelledBtn");
@@ -137,13 +121,5 @@ window.addEventListener("DOMContentLoaded", function () {
         toggleBtn.addEventListener("click", toggleCancelledAppointments);
     }
 
-    const filters = document.querySelectorAll(".filter-appointments");
-    filters.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const type = btn.getAttribute("data-type");
-            filterAppointmentsByDate(type);
-        });
-    });
-
-    setupAdminFilters(); // ✅ Setup filters & search for admin view
+    setupAdminFilters(); // ✅ Active filtering logic
 });

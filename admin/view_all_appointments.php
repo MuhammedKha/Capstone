@@ -41,9 +41,9 @@ $today = date('Y-m-d');
         <button class="btn btn-outline-danger filter-btn" data-type="cancelled">Cancelled</button>
     </div>
 
-    <!-- Search input -->
+    <!-- Fixed Search input -->
     <div class="mb-3">
-        <input type="text" class="form-control" id="searchInput" placeholder="Search by client or provider name">
+        <input type="text" class="form-control" id="appointmentSearch" placeholder="Search by client or provider name">
     </div>
 
     <!-- Appointments table -->
@@ -79,6 +79,7 @@ $today = date('Y-m-d');
         </tbody>
     </table>
 
+    <!-- Optional pagination placeholder -->
     <nav>
         <ul class="pagination justify-content-center" id="pagination"></ul>
     </nav>
