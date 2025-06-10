@@ -28,6 +28,7 @@ $name = $_SESSION['name'];
         <div class="d-grid gap-3">
             <a href="manage_users.php" class="btn btn-primary">Manage Users (Approve/Delete)</a>
             <a href="view_all_appointments.php" class="btn btn-secondary">View All Appointments</a>
+            <a href="cancel_appointment_admin.php" class="btn btn-outline-danger w-100 my-2">Cancel Appointments</a>
             <a href="../users/logout.php" class="btn btn-danger">Logout</a>
         </div>
     </div>
