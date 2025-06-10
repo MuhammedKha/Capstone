@@ -1,4 +1,8 @@
 <?php
+// Set timezone to Melbourne
+date_default_timezone_set('Australia/Melbourne');
+
+// Start session and include config
 session_start();
 require_once '../includes/config.php';
 

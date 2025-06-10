@@ -1,4 +1,8 @@
 <?php
+// Set timezone to Melbourne
+date_default_timezone_set('Australia/Melbourne');
+
+// Start session and include config
 session_start();
 require_once '../includes/config.php';
 
@@ -7,9 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     exit;
 }
 
-// Set timezone to Melbourne
-date_default_timezone_set('Australia/Melbourne');
-
+// Get client ID from session
 $client_id = $_SESSION['user_id'];
 $msg = "";
 

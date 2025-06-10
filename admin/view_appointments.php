@@ -1,4 +1,8 @@
 <?php
+// Set timezone to Melbourne
+date_default_timezone_set('Australia/Melbourne');
+
+// Start session and include config
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../users/login.php");

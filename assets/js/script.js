@@ -2,7 +2,7 @@
 
 /**
  * Filters available slots in reschedule form to only show those
- * from the same provider as the selected appointment.
+ * from the same provider as the selected appointment, and only future slots.
  */
 function updateSlotsByProvider() {
     const apptDropdown = document.getElementById("appointment_id");
@@ -10,9 +10,25 @@ function updateSlotsByProvider() {
     const providerId = selectedOption ? selectedOption.getAttribute("data-provider") : null;
 
     const slotOptions = document.querySelectorAll("#new_slot_id option");
+    const now = new Date();
+
     slotOptions.forEach(opt => {
         const optProvider = opt.getAttribute("data-provider");
-        if (providerId && optProvider === providerId) {
+        const slotText = opt.textContent;
+
+        // Extract date and start time from option text
+        const dateMatch = slotText.match(/(\d{4}-\d{2}-\d{2})/);
+        const timeMatch = slotText.match(/\((\d{2}:\d{2}:\d{2}) to/);
+
+        let slotDateTime = null;
+        if (dateMatch && timeMatch) {
+            const datetimeStr = `${dateMatch[1]}T${timeMatch[1]}`;
+            slotDateTime = new Date(datetimeStr);
+        }
+
+        const isExpired = slotDateTime && slotDateTime < now;
+
+        if (providerId && optProvider === providerId && !isExpired) {
             opt.style.display = "block";
         } else {
             opt.style.display = "none";
@@ -103,4 +119,3 @@ window.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
-
