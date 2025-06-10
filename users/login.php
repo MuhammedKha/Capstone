@@ -9,16 +9,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = trim($_POST['password']);
 
     if (!empty($email) && !empty($password)) {
-        $stmt = $conn->prepare("SELECT id, name, password, role FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, name, password, role, status FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $stmt->store_result();
 
         if ($stmt->num_rows === 1) {
-            $stmt->bind_result($id, $name, $hashedPassword, $role);
+            $stmt->bind_result($id, $name, $hashedPassword, $role, $status);
             $stmt->fetch();
 
-            if (password_verify($password, $hashedPassword)) {
+            if ($role === 'provider' && $status !== 'approved') {
+                $msg = "⏳ Your provider account is pending admin approval.";
+            } elseif (password_verify($password, $hashedPassword)) {
                 $_SESSION['user_id'] = $id;
                 $_SESSION['name'] = $name;
                 $_SESSION['email'] = $email;
@@ -73,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <h2 class="mb-4 text-center">Login to OABS</h2>
 
                 <?php if (!empty($msg)): ?>
-                    <div class="alert alert-danger"><?php echo $msg; ?></div>
+                    <div class="alert alert-warning"><?php echo $msg; ?></div>
                 <?php endif; ?>
 
                 <form method="POST" novalidate>
