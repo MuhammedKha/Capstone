@@ -96,9 +96,11 @@ function setupAdminFilters() {
                 if (filter === "upcoming") {
                     show = status === "booked" && date >= today;
                 } else if (filter === "past") {
-                    show = status === "booked" && date < today;
+                    show = (status === "booked" || status === "completed") && date < today;
                 } else if (filter === "cancelled") {
                     show = status === "cancelled";
+                } else {
+                    show = true; // all
                 }
 
                 row.style.display = show ? "" : "none";
