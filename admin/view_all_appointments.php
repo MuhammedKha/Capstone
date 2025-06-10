@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+// Fetch appointments
 $appointments = $conn->query("
     SELECT a.*, u1.name AS client_name, u2.name AS provider_name
     FROM appointments a
@@ -24,6 +25,7 @@ $today = date('Y-m-d');
 <head>
     <title>View Appointments – Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 <?php include '../templates/header.php'; ?>
@@ -31,6 +33,7 @@ $today = date('Y-m-d');
 <div class="container my-5">
     <h2 class="mb-4">All Appointments</h2>
 
+    <!-- Filter buttons -->
     <div class="btn-group mb-3" role="group">
         <button class="btn btn-outline-primary filter-btn" data-type="all">All</button>
         <button class="btn btn-outline-success filter-btn" data-type="upcoming">Upcoming</button>
@@ -38,10 +41,20 @@ $today = date('Y-m-d');
         <button class="btn btn-outline-danger filter-btn" data-type="cancelled">Cancelled</button>
     </div>
 
+    <!-- Search input -->
+    <div class="mb-3">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search by client or provider name">
+    </div>
+
+    <!-- Appointments table -->
     <table class="table table-bordered" id="appointmentsTable">
         <thead>
             <tr>
-                <th>Client</th><th>Provider</th><th>Date</th><th>Time</th><th>Status</th>
+                <th>Client</th>
+                <th>Provider</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -51,7 +64,11 @@ $today = date('Y-m-d');
                     $isPast = $apptDate < $today;
                     $rowClass = ($row['status'] === 'cancelled') ? 'table-danger' : ($isPast ? 'table-warning' : 'table-success');
                 ?>
-                <tr class="<?= $rowClass ?>" data-date="<?= $apptDate ?>" data-status="<?= $row['status'] ?>">
+                <tr class="<?= $rowClass ?> appointment-row"
+                    data-date="<?= $apptDate ?>"
+                    data-status="<?= $row['status'] ?>"
+                    data-client="<?= strtolower($row['client_name']) ?>"
+                    data-provider="<?= strtolower($row['provider_name']) ?>">
                     <td><?= htmlspecialchars($row['client_name']) ?></td>
                     <td><?= htmlspecialchars($row['provider_name']) ?></td>
                     <td><?= $row['appointment_date'] ?></td>
@@ -62,30 +79,13 @@ $today = date('Y-m-d');
         </tbody>
     </table>
 
+    <nav>
+        <ul class="pagination justify-content-center" id="pagination"></ul>
+    </nav>
+
     <a href="dashboard_admin.php" class="btn btn-link mt-3">← Back to Dashboard</a>
 </div>
 
 <script src="../assets/js/script.js"></script>
-<script>
-document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const type = btn.getAttribute("data-type");
-        const today = new Date().toISOString().split("T")[0];
-        const rows = document.querySelectorAll("#appointmentsTable tbody tr");
-
-        rows.forEach(row => {
-            const date = row.getAttribute("data-date");
-            const status = row.getAttribute("data-status");
-
-            let show = true;
-            if (type === "upcoming") show = status === "booked" && date >= today;
-            else if (type === "past") show = status === "booked" && date < today;
-            else if (type === "cancelled") show = status === "cancelled";
-
-            row.style.display = show || type === "all" ? "" : "none";
-        });
-    });
-});
-</script>
 </body>
 </html>

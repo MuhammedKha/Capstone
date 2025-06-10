@@ -76,23 +76,23 @@ function toggleCancelledAppointments() {
 }
 
 /**
- * Filter appointments table by type: past, upcoming, or all
+ * Filter appointments table by type: past, upcoming, cancelled, or all
  */
-function filterAppointmentsByDate(filter) {
+function filterAppointmentsTable(filterType, tableId = "appointmentsTable") {
     const today = new Date().toISOString().split("T")[0];
-    const rows = document.querySelectorAll(".appointment-row");
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
 
     rows.forEach(row => {
         const date = row.getAttribute("data-date");
-        if (!date) return;
+        const status = row.getAttribute("data-status");
 
-        if (filter === "upcoming" && date < today) {
-            row.style.display = "none";
-        } else if (filter === "past" && date >= today) {
-            row.style.display = "none";
-        } else {
-            row.style.display = "";
-        }
+        let show = true;
+        if (filterType === "upcoming") show = status === "booked" && date >= today;
+        else if (filterType === "past") show = status === "booked" && date < today;
+        else if (filterType === "cancelled") show = status === "cancelled";
+        else show = true; // all
+
+        row.style.display = show ? "" : "none";
     });
 }
 
@@ -102,7 +102,7 @@ window.addEventListener("DOMContentLoaded", function () {
     const appointmentDropdown = document.getElementById("appointment_id");
     if (appointmentDropdown) {
         appointmentDropdown.addEventListener("change", updateSlotsByProvider);
-        updateSlotsByProvider(); // ✅ Ensure filter runs immediately
+        updateSlotsByProvider(); // Run on load
     }
 
     const toggleBtn = document.getElementById("toggleCancelledBtn");
@@ -114,7 +114,8 @@ window.addEventListener("DOMContentLoaded", function () {
     filters.forEach(btn => {
         btn.addEventListener("click", () => {
             const type = btn.getAttribute("data-type");
-            filterAppointmentsByDate(type);
+            const targetTable = btn.getAttribute("data-table") || "appointmentsTable";
+            filterAppointmentsTable(type, targetTable);
         });
     });
 });
