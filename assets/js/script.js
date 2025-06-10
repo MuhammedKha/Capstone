@@ -64,16 +64,45 @@ function toggleCancelledAppointments() {
     }
 }
 
-// Setup admin filters and search bar
+// Filter provider view: show past/upcoming/all appointments
+function setupProviderFilters() {
+    const buttons = document.querySelectorAll(".filter-appointments");
+    const rows = document.querySelectorAll(".appointment-row");
+    const today = new Date().toISOString().split("T")[0];
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const filter = btn.getAttribute("data-type");
+
+            rows.forEach(row => {
+                const date = row.getAttribute("data-date");
+                const status = row.getAttribute("data-status");
+                let show = true;
+
+                if (filter === "upcoming") {
+                    show = status === "booked" && date >= today;
+                } else if (filter === "past") {
+                    show = (status === "booked" || status === "completed") && date < today;
+                } else {
+                    show = true; // "all"
+                }
+
+                row.style.display = show ? "" : "none";
+            });
+        });
+    });
+}
+
+// Admin filters and search input
 function setupAdminFilters() {
     const filterButtons = document.querySelectorAll(".filter-btn");
     const searchInput = document.getElementById("searchInput");
     const rows = document.querySelectorAll("#appointmentsTable tbody tr");
+    const today = new Date().toISOString().split("T")[0];
 
     filterButtons.forEach(btn => {
         btn.addEventListener("click", () => {
             const filter = btn.getAttribute("data-type");
-            const today = new Date().toISOString().split("T")[0];
 
             rows.forEach(row => {
                 const date = row.getAttribute("data-date");
@@ -106,7 +135,7 @@ function setupAdminFilters() {
     }
 }
 
-// On page load
+// DOM Loaded
 window.addEventListener("DOMContentLoaded", function () {
     populateTimeDropdowns();
 
@@ -121,5 +150,6 @@ window.addEventListener("DOMContentLoaded", function () {
         toggleBtn.addEventListener("click", toggleCancelledAppointments);
     }
 
-    setupAdminFilters(); // ✅ Active filtering logic
+    setupAdminFilters();
+    setupProviderFilters();
 });
