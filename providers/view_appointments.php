@@ -1,8 +1,5 @@
 <?php
-// Set timezone to Melbourne
 date_default_timezone_set('Australia/Melbourne');
-
-// Start session and include config
 session_start();
 require_once '../includes/config.php';
 
@@ -15,13 +12,13 @@ $provider_id = $_SESSION['user_id'];
 $name = $_SESSION['name'];
 $msg = "";
 
-// Auto-update past appointments
+// Auto-mark past bookings as completed
 $conn->query("UPDATE appointments SET status = 'completed' 
               WHERE provider_id = $provider_id 
               AND appointment_date < CURDATE() 
               AND status = 'booked'");
 
-// Manual completion from provider
+// Manual mark as completed
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['complete_id'])) {
     $complete_id = intval($_POST['complete_id']);
     $stmt = $conn->prepare("UPDATE appointments SET status = 'completed' 
@@ -84,7 +81,7 @@ while ($row = $result->fetch_assoc()) {
 
         <?php if (count($active) > 0): ?>
             <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle">
+                <table class="table table-bordered text-center align-middle" id="appointmentsTable">
                     <thead class="table-light">
                         <tr>
                             <th>Client</th>
@@ -96,7 +93,9 @@ while ($row = $result->fetch_assoc()) {
                     </thead>
                     <tbody>
                         <?php foreach ($active as $row): ?>
-                            <tr class="appointment-row" data-date="<?= htmlspecialchars($row['appointment_date']) ?>">
+                            <tr class="appointment-row"
+                                data-date="<?= htmlspecialchars($row['appointment_date']) ?>"
+                                data-status="<?= htmlspecialchars($row['status']) ?>">
                                 <td><?= htmlspecialchars($row['client_name']) ?></td>
                                 <td><?= htmlspecialchars($row['appointment_date']) ?></td>
                                 <td><?= htmlspecialchars($row['start_time']) ?> – <?= htmlspecialchars($row['end_time']) ?></td>
@@ -114,10 +113,7 @@ while ($row = $result->fetch_assoc()) {
                                                 <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                                                 <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
                                             </form>
-                                            <?php
-                                                $today = date('Y-m-d');
-                                                if ($row['appointment_date'] <= $today):
-                                            ?>
+                                            <?php if ($row['appointment_date'] <= date('Y-m-d')): ?>
                                                 <form method="POST" onsubmit="return confirm('Mark this appointment as completed?');">
                                                     <input type="hidden" name="complete_id" value="<?= $row['id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-secondary">Complete</button>
@@ -137,7 +133,6 @@ while ($row = $result->fetch_assoc()) {
             <div class="alert alert-info text-center">No active appointments found.</div>
         <?php endif; ?>
 
-        <!-- Cancelled Appointments Section -->
         <div id="cancelledAppointments" class="mt-5 d-none">
             <h5 class="text-danger text-center mb-3">Cancelled Appointments</h5>
             <?php if (count($cancelled) > 0): ?>
