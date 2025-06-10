@@ -5,6 +5,7 @@ date_default_timezone_set('Australia/Melbourne');
 // Start session and include config
 session_start();
 require_once '../includes/config.php';
+require_once '../includes/mail_helper.php'; // Include mail helper for PHPMailer
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header("Location: ../users/login.php");
@@ -26,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
     $slot = $result->fetch_assoc();
 
     if ($slot) {
-        // Convert slot date+time to a DateTime object
         $slotDT = new DateTime($slot['available_date'] . ' ' . $slot['start_time']);
         $now = new DateTime();
 
@@ -37,7 +37,55 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
                 $stmtUpdate = $conn->prepare("UPDATE availability SET status = 'booked' WHERE id = ?");
                 $stmtUpdate->bind_param("i", $slot_id);
                 $stmtUpdate->execute();
-                $msg = "<div class='alert alert-success'>✅ Appointment booked successfully.</div>";
+
+                // Fetch user emails
+                $stmtEmails = $conn->prepare("
+                    SELECT 
+                        c.name AS client_name, c.email AS client_email,
+                        p.name AS provider_name, p.email AS provider_email
+                    FROM users c, users p
+                    WHERE c.id = ? AND p.id = ?
+                ");
+                $stmtEmails->bind_param("ii", $client_id, $slot['provider_id']);
+                $stmtEmails->execute();
+                $resultEmails = $stmtEmails->get_result();
+                $emails = $resultEmails->fetch_assoc();
+
+                // Compose emails
+                $apptDate = $slot['available_date'];
+                $start = $slot['start_time'];
+                $end = $slot['end_time'];
+                $service = $slot['service_name'] ?? "Appointment";
+
+                $subject = "Appointment Booked: $apptDate ($start – $end)";
+                $body = "
+                    <p>Dear {$emails['client_name']},</p>
+                    <p>Your appointment for <strong>$service</strong> with <strong>{$emails['provider_name']}</strong> has been booked:</p>
+                    <ul>
+                        <li><strong>Date:</strong> $apptDate</li>
+                        <li><strong>Time:</strong> $start to $end</li>
+                    </ul>
+                    <p>You’ll be notified of any updates.</p>
+                    <p>Regards,<br>OABS Team</p>
+                ";
+
+                $providerBody = "
+                    <p>Dear {$emails['provider_name']},</p>
+                    <p><strong>{$emails['client_name']}</strong> has booked an appointment with you for <strong>$service</strong> on:</p>
+                    <ul>
+                        <li><strong>Date:</strong> $apptDate</li>
+                        <li><strong>Time:</strong> $start to $end</li>
+                    </ul>
+                    <p>Login to your dashboard to manage appointments.</p>
+                    <p>Regards,<br>OABS System</p>
+                ";
+
+                $adminEmail = 'capstoneproject0044@gmail.com'; // Change if needed
+                sendMail($emails['client_email'], $subject, $body);
+                sendMail($emails['provider_email'], $subject, $providerBody);
+                sendMail($adminEmail, "Admin Alert – $subject", $providerBody); // Optional
+
+                $msg = "<div class='alert alert-success'>✅ Appointment booked successfully. Confirmation emails sent.</div>";
             } else {
                 $msg = "<div class='alert alert-danger'>❌ Failed to book appointment.</div>";
             }
@@ -49,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['slot_id'])) {
     }
 }
 
-// Fetch all available slots (including future ones, raw)
+// Fetch all available slots
 $raw_slots = $conn->query("
     SELECT a.id, a.available_date, a.start_time, a.end_time, a.service_name, u.name AS provider_name
     FROM availability a
@@ -58,7 +106,7 @@ $raw_slots = $conn->query("
     ORDER BY a.available_date, a.start_time
 ");
 
-// Filter future-only slots using PHP
+// Filter future-only slots
 $slots = [];
 $now = new DateTime();
 while ($row = $raw_slots->fetch_assoc()) {
