@@ -27,7 +27,7 @@
           </h2>
           <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
             <div class="accordion-body">
-              Yes, you can manage appointments from your client dashboard under "My Appointments".
+              Yes, you can manage appointments from your client dashboard under "Cancel Appointment" and "reschedule Appointment".
             </div>
           </div>
         </div>
