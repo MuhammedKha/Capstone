@@ -29,7 +29,7 @@
                 <div class="card shadow">
                     <img src="assets/img/provider2.jpg" class="card-img-top" alt="Wellness Studio">
                     <div class="card-body">
-                        <h5 class="card-title">Wellness Studio</h5>
+                        <h5 class="card-title">Queen Dental Clinic</h5>
                         <p class="card-text">Trusted by 400+ happy clients.</p>
                         <span class="badge bg-success">★★★★★</span>
                     </div>
